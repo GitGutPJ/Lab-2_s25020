@@ -1,0 +1,51 @@
+name: CI/CD Pipeline for Data Processing
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  train-model:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Downloading repository Lab2--Okr-bka-danych
+        run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOK }}@github.com/PJATK-ASI-2024/Lab2---Obr-bka-danych.git
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Installing dependecies
+        run: |
+          pip install -r requirements.txt
+          pip install -r Lab2---Obr-bka-danych/requirements.txt
+
+
+      - name: Run generator_danych.py
+        run: python3 Lab2---Obr-bka-danych/generator_danych.py -s 25020
+
+      - name: Saving data to Google Sheets
+        env:
+          GOOGLE_SHEETS_CRED: ${{ secrets.GOOGLE_SHEETS_CRED }}
+        run: |
+          echo "$GOOGLE_SHEETS_CRED" > creds.json
+          python3 google_sheets_sender.py
+
+      - name: Run data_processing.py
+        env:
+          GOOGLE_SHEETS_CRED: ${{ secrets.GOOGLE_SHEETS_CRED }}
+        run: python3 data_processing.py
+
+
+      - name: Display report
+        run: cat report.txt
+
+      - name: Display cleared data csv
+        run: cat cleaned_data.csv

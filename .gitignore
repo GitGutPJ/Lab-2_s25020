@@ -1,0 +1,6 @@
+/.idea/
+.venv
+creds.json
+log.txt
+report.txt
+cleaned_data.csv
